@@ -1,3 +1,13 @@
+nodejs-connect (0.2.5-0sg3) UNRELEASED; urgency=low
+
+  [ Wade Simmons ]
+  * add debian/source/format
+  * add debian/source/include-binaries
+
+  [ SimpleGeo Nerds ]
+
+ -- SimpleGeo Nerds <nerds@simplegeo.com>  Wed, 13 Oct 2010 21:11:53 +0000
+
 nodejs-connect (0.2.5-0sg0) unstable; urgency=low
 
   * Debianized
