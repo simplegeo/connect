@@ -1,3 +1,9 @@
+nodejs-connect (0.2.6-0sg0) unstable; urgency=low
+
+  * New upstream release
+
+ -- Wade Simmons <wade@simplegeo.com>  Fri, 15 Oct 2010 10:31:29 -0600
+
 nodejs-connect (0.2.5-0sg3) UNRELEASED; urgency=low
 
   [ Wade Simmons ]
