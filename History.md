@@ -1,5 +1,47 @@
 
-1.0.0 / 2010-07-21
+0.5.4 / 2011-01-07 
+==================
+
+  * Added; throw when router path or callback is missing
+  * Fixed; `next(err)` on cookie parse exception instead of ignoring
+  * Revert "Added utils.pathname(), memoized url.parse(str).pathname"
+
+0.5.3 / 2011-01-05 
+==================
+
+  * Added _docs/api.html_
+  * Added `utils.pathname()`, memoized url.parse(str).pathname
+  * Fixed `session.id` issue. Closes #183
+  * Changed; Defaulting `staticProvider` maxAge to 0 not 1 year. Closes #179
+  * Removed bad outdated docs, we need something new / automated eventually
+
+0.5.2 / 2010-12-28 
+==================
+
+  * Added default __OPTIONS__ support to _router_ middleware
+
+0.5.1 / 2010-12-28 
+==================
+
+  * Added `req.session.id` mirroring `req.sessionID`
+  * Refactored router, exposing `connect.router.methods`
+  * Exclude non-lib files from npm
+  * Removed imposed headers `X-Powered-By`, `Server`, etc
+
+0.5.0 / 2010-12-06 
+==================
+
+  * Added _./index.js_
+  * Added route segment precondition support and example
+  * Added named capture group support to router
+
+0.4.0 / 2010-11-29 
+==================
+
+  * Added `basicAuth` middleware
+  * Added more HTTP methods to the `router` middleware
+
+0.3.0 / 2010-07-21
 ==================
 
   * Added _staticGzip_ middleware
