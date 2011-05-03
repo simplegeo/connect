@@ -3,186 +3,263 @@
  * Module dependencies.
  */
 
-var connect = require('connect'),
-    helpers = require('./helpers'),
-    assert = require('assert'),
-    http = require('http');
+var connect = require('connect')
+  , exec = require('child_process').exec
+  , should = require('should')
+  , assert = require('assert')
+  , https = require('https')
+  , http = require('http')
+  , fs = require('fs');
 
 module.exports = {
-    'test version': function(){
-        assert.ok(/^\d+\.\d+\.\d+$/.test(connect.version), 'Test framework version format');
-    },
+  'test version': function(){
+    connect.version.should.match(/^\d+\.\d+\.\d+$/);
+  },
+  
+  'test connect()': function(){
+    var app = connect(
+      function(req, res){
+        res.end('wahoo');
+      }
+    );
 
-    'test use()': function(){
-        var server = helpers.run();
+    assert.response(app,
+      { url: '/' },
+      { body: 'wahoo' });
+  },
 
-        server.use('/blog', function(req, res){
-            res.writeHead(200, {});
-            res.end('blog');
-        });
+  'test use()': function(){
+    var app = connect.createServer();
 
-        var ret = server.use(
-            function(req, res){
-                res.writeHead(200, {});
-                res.end('wahoo');
-            }
-        );
+    app.use('/blog', function(req, res){
+      res.end('blog');
+    });
 
-        assert.equal(server, ret, 'Test Server#use() returns server for chaining');
-        server.assertResponse('GET', '/', 200, 'wahoo');
-        server.assertResponse('GET', '/blog', 200, 'blog');
-    },
+    var ret = app.use(
+      function(req, res){
+        res.end('default');
+      }
+    );
 
-    'test path matching': function(){
-        var n = 0;
-        var server = helpers.run();
+    ret.should.equal(app);
 
-        server.use('/hello/world', function(req, res, next){
-            switch (++n) {
-                case 1:
-                case 2:
-                    assert.equal('/', req.url, 'Test request url after matching a path');
-                    break;
-                case 3:
-                    assert.equal('/hello/world/and/more/segments',
-                        req.originalUrl,
-                        'Test request originalUrl');
-                    assert.equal('/and/more/segments',
-                        req.url,
-                        'Test request url after matching a path with additional segments');
-                    break;
-                case 4:
-                    assert.equal('/images/foo.png?with=query&string',
-                        req.url,
-                        'Test request url after matching a path with query string');
-                    break;
-            }
-            res.writeHead(200);
-            res.end('hello world');
-        });
+    assert.response(app,
+      { url: '/' },
+      { body: 'default', status: 200 });
 
-        server.use('/hello', function(req, res, next){
-            res.writeHead(200);
-            res.end('hello');
-        });
+    assert.response(app,
+      { url: '/blog' },
+      { body: 'blog', status: 200 });
+  },
 
-        server.assertResponse('GET', '/hello', 200, 'hello', 'Test path matching /hello');
-        server.assertResponse('GET', '/hello/', 200, 'hello', 'Test path matching /hello/');
-        server.assertResponse('GET', '/hello/world', 200, 'hello world', 'Test path matching /hello/world');
-        server.assertResponse('GET', '/hello/world/', 200, 'hello world', 'Test path matching /hello/world/');
-        server.assertResponse('GET', '/hello/world/and/more/segments', 200, 'hello world', 'Test path matching /hello/world/and/more/segments');
-        server.assertResponse('GET', '/hello/world/images/foo.png?with=query&string', 200, 'hello world', 'Test path matching /hello/world/images/foo.png?with=query&string');
-    },
+  'test use() several': function(beforeExit){
+    var app = connect.createServer()
+      , calls = 0;
 
-    'test unmatched path': function(){
-        var server = helpers.run();
-        server.assertResponse('GET', '/', 404, 'Cannot GET /', 'Test unmatched path');
-        server.assertResponse('GET', '/foo', 404, 'Cannot GET /foo', 'Test unmatched path');
-    },
-
-    'test handleError': function(){
-        var called = 0;
-        var server = helpers.run(
-            function(req, res, next){
-                // Pass error
-                next(new Error('shitty deal'));
-            },
-            function(err, req, res, next){
-                ++called;
-                assert.ok(err instanceof Error, 'Test handleError() Error as first param');
-                assert.equal('object', typeof req);
-                assert.equal('object', typeof res);
-                assert.equal('function', typeof next);
-                req.body = err.message;
-                next(err);
-            },
-            function(err, req, res, next){
-                ++called;
-                assert.ok(err instanceof Error, 'Test handleError() next(error)');
-                assert.equal('object', typeof req);
-                assert.equal('object', typeof res);
-                assert.equal('function', typeof next);
-                // Recover exceptional state
-                next();
-            },
-            function(req, res, next){
-                res.writeHead(200, {});
-                res.end(req.body);
-            },
-            connect.errorHandler()
-        );
-        server.assertResponse('GET', '/', 200, 'shitty deal', 'Test handleError next()', function(){
-            var expected = 2;
-            assert.equal(expected, called, 'Test handleError calls, expected ' + expected + ' but got ' + called);
-        });
-    },
-
-    'test catch error': function(){
-        var server = helpers.run(
-            function(req, res, next){
-                doesNotExist();
-            }
-        );
-
-        var req = server.request('GET', '/');
-        req.buffer = true;
-        req.addListener('response', function(res){
-            res.addListener('end', function(){
-                assert.equal(500, res.statusCode, 'Test 500 by default on exception');
-            });
-        });
-        req.end();
-    },
-
-    'test mounting': function(){
-        var helloWorldServer = connect.createServer();
-        helloWorldServer.use('/world', function(req, res){
-            assert.equal('/hello', helloWorldServer.route);
-            res.writeHead(200);
-            res.end('hello world');
-        });
-
-        var server = helpers.run();
-        server.use('/hello', helloWorldServer);
-        server.use('/hello', function(req, res){
-            res.writeHead(200);
-            res.end('hello');
-        });
-
-        server.assertResponse('GET', '/hello/world', 200, 'hello world', 'Test mounting /hello/world');
-        server.assertResponse('GET', '/hello', 200, 'hello', 'Test mounting /hello');
-    },
-
-    'test connect as middleware': function(){
-        var inner = connect.createServer();
-        inner.use('/inner', function(req, res){
-            if (req.method === 'POST') {
-                res.writeHead(200);
-                res.end('inner stack');
-            } else {
-                next();
-            }
-        });
-
-        var middle = connect.createServer(inner);
-        middle.use('/', function(req, res, next){
-            if (req.method === 'POST') {
-                res.writeHead(200);
-                res.end('middle stack');
-            } else {
-                next();
-            }
-        });
-
-        var server = helpers.run(middle);
-        server.use('/outer', function(req, res){
-            res.writeHead(200);
-            res.end('outer stack');
-        });
-
-        server.assertResponse('GET', '/outer', 200, 'outer stack', 'Test outer stack');
-        server.assertResponse('POST', '/', 200, 'middle stack', 'Test middle stack');
-        server.assertResponse('POST', '/inner', 200, 'inner stack', 'Test inner stack');
-        server.assertResponse('GET', '/', 404, 'Cannot GET /', 'Test multiple stacks unmatched path');
+    function a(req, res, next){
+      ++calls;
+      next();
     }
-}
+    
+    function b(req, res, next){
+      ++calls;
+      res.end('admin');
+    }
+
+    app.use('/admin', a, b);
+
+    assert.response(app,
+      { url: '/admin' },
+      { body: 'admin' });
+
+    beforeExit(function(){
+      calls.should.equal(2);
+    });
+  },
+  
+  'test path matching': function(){
+    var n = 0
+      , app = connect.createServer();
+
+    app.use('/hello/world', function(req, res, next){
+      switch (++n) {
+        case 1:
+        case 2:
+          req.url.should.equal('/');
+          break;
+        case 3:
+          req.originalUrl.should.equal('/hello/world/and/more/segments');
+          req.url.should.equal('/and/more/segments');
+          break;
+        case 4:
+          req.url.should.equal('/images/foo.png?with=query&string');
+          break;
+      }
+
+      res.end('hello world');
+    });
+
+    app.use('/hello', function(req, res, next){
+      res.end('hello');
+    });
+
+    var foo = connect(function(req, res, next){
+      res.end(foo.route);
+    });
+
+    app.use('/foo', function(req, res, next){ next(); }, foo);
+
+    assert.response(app,
+      { url: '/foo' },
+      { body: '/foo' });
+
+    assert.response(app,
+      { url: '/hello' },
+      { body: 'hello' });
+    
+    assert.response(app,
+      { url: '/hello/' },
+      { body: 'hello' });
+
+    assert.response(app,
+      { url: '/hello/world' },
+      { body: 'hello world' });
+
+    assert.response(app,
+      { url: '/hello/world/' },
+      { body: 'hello world' });
+
+    assert.response(app,
+      { url: '/hello/world/and/more/segments' },
+      { body: 'hello world' });
+
+    assert.response(app,
+      { url: '/hello/world/images/foo.png?with=query&string' },
+      { body: 'hello world' });
+  },
+  
+  'test unmatched path': function(){
+    var app = connect.createServer();
+
+    assert.response(app,
+      { url: '/' },
+      { body: 'Cannot GET /', status: 404 });
+
+    assert.response(app,
+      { url: '/foo', method: 'POST' },
+      { body: 'Cannot POST /foo', status: 404 });
+  },
+  
+  'test error handling': function(){
+    var calls = 0;
+    var app = connect.createServer(
+      function(req, res, next){
+        // Pass error
+        next(new Error('lame'));
+      },
+      function(err, req, res, next){
+        ++calls;
+        err.should.be.an.instanceof(Error);
+        req.should.be.a('object');
+        res.should.be.a('object');
+        next.should.be.a('function');
+        req.body = err.message;
+        next(err);
+      },
+      function(err, req, res, next){
+        ++calls;
+        err.should.be.an.instanceof(Error);
+        req.should.be.a('object');
+        res.should.be.a('object');
+        next.should.be.a('function');
+        // Recover exceptional state
+        next();
+      },
+      function(req, res, next){
+        res.end(req.body);
+      },
+      connect.errorHandler()
+    );
+
+    assert.response(app,
+      { url: '/' },
+      { body: 'lame', status: 200 },
+      function(){
+        calls.should.equal(2);
+      });
+  },
+  
+  'test catch error': function(){
+    var app = connect.createServer(
+      function(req, res, next){
+        doesNotExist();
+      }
+    );
+
+    assert.response(app,
+      { url: '/' },
+      { status: 500 });
+  },
+  
+  'test mounting': function(){
+    var app = connect.createServer();
+
+    app.use('/', function(req, res){
+      // TODO: should inherit parent's /hello
+      // to become /hello/world/view
+      app.route.should.equal('/world/view');
+      res.end('viewing hello world');
+    });
+
+    var app1 = connect.createServer();
+    app1.use('/world/view', app);
+    app1.use('/world', function(req, res){
+      app1.route.should.equal('/hello');
+      res.end('hello world');
+    });
+
+    var app2 = connect.createServer();
+    app2.use('/hello', app1);
+    app2.use('/hello', function(req, res){
+      app2.route.should.equal('/');
+      res.end('hello');
+    });
+
+    assert.response(app2,
+      { url: '/hello/world/view' },
+      { body: 'viewing hello world' });
+
+    assert.response(app2,
+      { url: '/hello/world' },
+      { body: 'hello world' });
+
+    assert.response(app2,
+      { url: '/hello' },
+      { body: 'hello' });
+  },
+  
+  'test mounting http.Server': function(){
+    var app = connect.createServer()
+      , world = http.createServer(function(req, res){
+        res.end('world');
+      });
+
+    app.use('/hello/', world);
+
+    assert.response(app,
+      { url: '/hello' },
+      { body: 'world' });
+  },
+  
+  'test .charset': function(){
+    var app = connect(function(req, res){
+      res.charset = 'utf8';
+      res.setHeader('Content-Type', 'text/html');
+      res.end('test');
+    });
+
+    assert.response(app,
+      { url: '/' },
+      { headers: { 'Content-Type': 'text/html; charset=utf8' }});
+  }
+};

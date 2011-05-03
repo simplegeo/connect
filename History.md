@@ -1,4 +1,183 @@
 
+1.4.0 / 2011-04-25 
+==================
+
+  * Added route-middleware `next('route')` support to jump passed the route itself
+  * Added Content-Length support to `limit()`
+  * Added route-specific middleware support (used to be in express)
+  * Changed; refactored duplicate session logic
+  * Changed; prevent redefining `store.generate` per request
+  * Fixed; `static()` does not set Content-Type when explicitly set [nateps]
+  * Fixed escape `errorHandler()` {error} contents
+  * NOTE: `router` will be removed in 2.0
+
+
+1.3.0 / 2011-04-06 
+==================
+
+  * Added `router.remove(path[, method])` to remove a route
+
+1.2.3 / 2011-04-05 
+==================
+
+  * Fixed basicAuth realm issue when passing strings. Closes #253
+
+1.2.2 / 2011-04-05 
+==================
+
+  * Added `basicAuth(username, password)` support
+  * Added `errorHandler.title` defaulting to "Connect"
+  * Changed `errorHandler` css
+
+1.2.1 / 2011-03-30 
+==================
+
+  * Fixed `logger()` https `remoteAddress` logging [Alexander Simmerl]
+
+1.2.0 / 2011-03-30 
+==================
+
+  * Added `router.lookup(path[, method])`
+  * Added `router.match(url[, method])`
+  * Added basicAuth async support. Closes #223
+
+1.1.5 / 2011-03-27 
+==================
+
+  * Added; allow `logger()` callback function to return an empty string to ignore logging
+  * Fixed; utilizing `mime.charsets.lookup()` for `static()`. Closes 245
+
+1.1.4 / 2011-03-23 
+==================
+
+  * Added `logger()` support for format function
+  * Fixed `logger()` to support mess of writeHead()/progressive api for node 0.4.x
+
+1.1.3 / 2011-03-21 
+==================
+
+  * Changed; `limit()` now calls `req.destroy()`
+
+1.1.2 / 2011-03-21 
+==================
+
+  * Added request "limit" event to `limit()` middleware
+  * Changed; `limit()` middleware will `next(err)` on failure
+
+1.1.1 / 2011-03-18 
+==================
+
+  * Fixed session middleware for HTTPS. Closes #241 [reported by mt502]
+
+1.1.0 / 2011-03-17 
+==================
+
+  * Added `Session#reload(fn)`
+
+1.0.6 / 2011-03-09 
+==================
+
+  * Fixed `res.setHeader()` patch, preserve casing
+
+1.0.5 / 2011-03-09 
+==================
+
+  * Fixed; `logger()` using `req.originalUrl` instead of `req.url`
+
+1.0.4 / 2011-03-09 
+==================
+
+  * Added `res.charset`
+  * Added conditional sessions example
+  * Added support for `session.ignore` to be replaced. Closes #227
+  * Fixed `Cache-Control` delimiters. Closes #228
+
+1.0.3 / 2011-03-03 
+==================
+
+  * Fixed; `static.send()` invokes callback with connection error
+
+1.0.2 / 2011-03-02 
+==================
+
+  * Fixed exported connect function
+  * Fixed package.json; node ">= 0.4.1 < 0.5.0"
+
+1.0.1 / 2011-03-02 
+==================
+
+  * Added `Session#save(fn)`. Closes #213
+  * Added callback support to `connect.static.send()` for express
+  * Added `connect.static.send()` "path" option
+  * Fixed content-type in `static()` for _index.html_
+
+1.0.0 / 2011-03-01 
+==================
+
+  * Added `stack`, `message`, and `dump` errorHandler option aliases
+  * Added `req.originalMethod` to methodOverride
+  * Added `favicon()` maxAge option support
+  * Added `connect()` alternative to `connect.createServer()`
+  * Added new [documentation](http://senchalabs.github.com/connect)
+  * Added Range support to `static()`
+  * Added HTTPS support
+  * Rewrote session middleware. The session API now allows for
+    session-specific cookies, so you may alter each individually.
+    Click to view the new [session api](http://senchalabs.github.com/connect/middleware-session.html).
+  * Added middleware self-awareness. This helps prevent
+    middleware breakage when used within mounted servers.
+    For example `cookieParser()` will not parse cookies more
+    than once even when within a mounted server.  
+  * Added new examples in the `./examples` directory
+  * Added [limit()](http://senchalabs.github.com/connect/middleware-limit.html) middleware
+  * Added [profiler()](http://senchalabs.github.com/connect/middleware-profiler.html) middleware
+  * Added [responseTime()](http://senchalabs.github.com/connect/middleware-responseTime.html) middleware
+  * Renamed `staticProvider` to `static`
+  * Renamed `bodyDecoder` to `bodyParser`
+  * Renamed `cookieDecoder` to `cookieParser`
+  * Fixed ETag quotes. [reported by papandreou]
+  * Fixed If-None-Match comma-delimited ETag support. [reported by papandreou]
+  * Fixed; only set req.originalUrl once. Closes #124
+  * Fixed symlink support for `static()`. Closes #123
+
+0.5.10 / 2011-02-14 
+==================
+
+  * Fixed SID space issue. Closes #196
+  * Fixed; proxy `res.end()` to commit session data
+  * Fixed directory traversal attack in `staticProvider`. Closes #198
+
+0.5.9 / 2011-02-09 
+==================
+
+  * qs >= 0.0.4
+
+0.5.8 / 2011-02-04 
+==================
+
+  * Added `qs` dependency
+  * Fixed router race-condition causing possible failure
+    when `next()`ing to one or more routes with parallel
+    requests
+
+0.5.7 / 2011-02-01 
+==================
+
+  * Added `onvhost()` call so Express (and others) can know when they are
+  * Revert "Added stylus support" (use the middleware which ships with stylus)
+  * Removed custom `Server#listen()` to allow regular `http.Server#listen()` args to work properly
+  * Fixed long standing router issue (#83) that causes '.' to be disallowed within named placeholders in routes [Andreas Lind Petersen]
+  * Fixed `utils.uid()` length error [Jxck]
+mounted
+
+0.5.6 / 2011-01-23 
+==================
+
+  * Added stylus support to `compiler`
+  * _favicon.js_ cleanup
+  * _compiler.js_ cleanup
+  * _bodyDecoder.js_ cleanup
+
 0.5.5 / 2011-01-13 
 ==================
 
