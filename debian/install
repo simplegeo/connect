@@ -1,1 +1,2 @@
-lib/connect usr/lib/nodejs
+index.js usr/lib/nodejs/connect
+lib usr/lib/nodejs/connect
